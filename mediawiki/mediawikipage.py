@@ -432,11 +432,13 @@ class MediaWikiPage(object):
                 Side effect is to also pull the content which can be slow
             Note:
                 This is a parsing operation and not part of the standard API'''
-        section = '== {0} =='.format(section_title)
+
+        section_regexp = '\n==* {} ==*\n'.format(section_title)
         try:
             content = self.content
-            index = content.index(section) + len(section)
-        except ValueError:
+            match = re.search(section_regexp, content)
+            index = match.span()[1]
+        except (ValueError, AttributeError):
             return None
 
         try:
