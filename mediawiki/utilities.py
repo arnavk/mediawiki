@@ -98,12 +98,3 @@ def set_key_path(_dict, path, value):
         node = node[key]
 
     node[path[-1]] = value
-
-
-def get_key_path(_dict, key_path, delimiter='.'):
-    path = key_path.split(delimiter)
-    node = _dict
-    for key in path:
-        node = node[key]
-
-    return node
