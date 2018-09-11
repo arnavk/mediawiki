@@ -90,3 +90,20 @@ def is_relative_url(url):
         # either 'http(s)://...' or '//cdn...' and therefore absolute
         return False
     return True
+
+
+def set_key_path(_dict, path, value):
+    node = _dict
+    for key in path[:-1]:
+        node = node[key]
+
+    node[path[-1]] = value
+
+
+def get_key_path(_dict, key_path, delimiter='.'):
+    path = key_path.split(delimiter)
+    node = _dict
+    for key in path:
+        node = node[key]
+
+    return node

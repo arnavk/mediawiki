@@ -8,9 +8,10 @@ from __future__ import (unicode_literals, absolute_import)
 from decimal import (Decimal)
 import re
 from bs4 import (BeautifulSoup, Tag)
-from .utilities import (str_or_unicode, is_relative_url)
+from .utilities import (str_or_unicode, is_relative_url, set_key_path)
 from .exceptions import (MediaWikiException, PageError, RedirectError,
                          DisambiguationError, ODD_ERROR_MESSAGE)
+import collections
 
 
 class MediaWikiPage(object):
@@ -62,6 +63,7 @@ class MediaWikiPage(object):
         self._backlinks = False
         self._summary = False
         self._sections = False
+        self._nested_sections = False
         self._logos = False
         self._hatnotes = False
 
@@ -101,7 +103,6 @@ class MediaWikiPage(object):
     # Properties
     def _pull_content_revision_parent(self):
         ''' combine the pulling of these three properties '''
-
         if self._revision_id is False:
             query_params = {
                 'prop': 'extracts|revisions',
@@ -417,6 +418,47 @@ class MediaWikiPage(object):
                     obj = obj.lstrip('\n= ').rstrip(' =\n')
                     self._sections.append(obj)
         return self._sections
+
+    def __parse_sections(self, sections):
+        nested = collections.OrderedDict()
+        name_stack = []
+        previous_level = None
+        for section in sections:
+
+            name = section['anchor']
+            level = int(section['level'])
+
+            if previous_level is not None and level <= previous_level:
+                diff = previous_level - level + 1
+                name_stack = name_stack[:-diff]
+
+            name_stack.append(name)
+            set_key_path(nested, name_stack, collections.OrderedDict())
+
+            previous_level = level
+        return nested
+
+    @property
+    def nested_sections(self):
+        if self._nested_sections is not False:
+            return self._nested_sections
+
+        self._nested_sections = []
+        query_params = {
+            'action': 'parse',
+            'prop': 'sections',
+        }
+        if self.pageid:
+            query_params['pageid'] = self.pageid
+        else:
+            query_params['page'] = self.title
+
+        request = self.mediawiki.wiki_request(query_params)
+        sections = request['parse']['sections']
+
+        self._nested_sections = self.__parse_sections(sections)
+
+        return self._nested_sections
 
     def section(self, section_title):
         ''' Plain text section content
