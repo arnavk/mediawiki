@@ -425,7 +425,7 @@ class MediaWikiPage(object):
         previous_level = None
         for section in sections:
 
-            name = section['anchor']
+            name = section['line']
             level = int(section['level'])
 
             if previous_level is not None and level <= previous_level:
