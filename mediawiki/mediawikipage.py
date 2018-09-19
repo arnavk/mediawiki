@@ -490,6 +490,44 @@ class MediaWikiPage(object):
 
         return self.content[index:next_index].lstrip('=').strip()
 
+    def nested_section_dict(self, section_title):
+        index = 0
+        queue = []
+        if section_title in self.nested_sections:
+            return {section_title: self.nested_sections[section_title]}
+
+        for k, node in self.nested_sections.iteritems():
+            queue.append(node)
+
+        while index < len(queue):
+            node = queue[index]
+
+            if section_title in node:
+                return {section_title: node[section_title]}
+
+            for k, sub_node in node.iteritems():
+                queue.append(sub_node)
+
+            index += 1
+
+    def flatten_nested_sections(self, section_tree):
+        result = []
+        for k, v in section_tree.iteritems():
+            result.append(k)
+            result += self.flatten_nested_sections(v)
+
+        return result
+
+    def full_section(self, section_title):
+        section_tree = self.nested_section_dict(section_title)
+        sections = self.flatten_nested_sections(section_tree)
+        result = ""
+
+        for section in sections:
+            result += section + "\t" + self.section(section) + "\n"
+
+        return result
+
     def parse_section_links(self, section_title):
         ''' Parse all links within a section
 
