@@ -520,6 +520,13 @@ class MediaWikiPage(object):
 
     def full_section(self, section_title):
         section_tree = self.nested_section_dict(section_title)
+
+        if not section_tree:
+            if section_title == self.title:
+                return self.content
+            else:
+                return ""
+
         sections = self.flatten_nested_sections(section_tree)
         result = ""
 
