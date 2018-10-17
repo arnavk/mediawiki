@@ -531,7 +531,7 @@ class MediaWikiPage(object):
         result = ""
 
         for section in sections:
-            result += section + "\t" + self.section(section) + "\n"
+            result += "=== " + section + " ===\n" + self.section(section) + "\n"
 
         return result
 
